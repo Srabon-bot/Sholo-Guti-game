@@ -69,6 +69,7 @@ const TRANSLATIONS = {
     skinMedallion: 'Sun Medallion',
     skinCustomPhoto: 'Custom Photo',
     applyAndPlay: 'Apply & Play Local',
+    applyAndPlayAI: 'Apply & Play vs AI',
   },
 
   bn: {
@@ -135,6 +136,7 @@ const TRANSLATIONS = {
     skinMedallion: 'সূর্য পদক',
     skinCustomPhoto: 'নিজের ছবি',
     applyAndPlay: 'প্রয়োগ করুন ও খেলুন',
+    applyAndPlayAI: 'প্রয়োগ করুন ও কম্পিউটারের সাথে খেলুন',
   },
 
   ko: {
@@ -201,6 +203,7 @@ const TRANSLATIONS = {
     skinMedallion: '태양 메달',
     skinCustomPhoto: '내 사진',
     applyAndPlay: '적용하고 로컬 플레이',
+    applyAndPlayAI: '적용하고 AI와 대전',
   },
 };
 

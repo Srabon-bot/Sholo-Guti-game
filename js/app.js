@@ -329,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
     showScreen('screen-local');
     startLocalMatch();
   });
+  document.getElementById('chardesign-play-ai-btn').addEventListener('click', () => {
+    showScreen('screen-vsai');
+    showAISetup();
+  });
 
   // Win overlay
   document.getElementById('win-play-again-btn').addEventListener('click', () => {

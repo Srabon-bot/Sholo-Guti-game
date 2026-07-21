@@ -435,6 +435,13 @@ body {
   text-align: center;
 }
 
+.chardesign-play-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
 .skin-picker-row {
   display: flex;
   gap: 1.5rem;
