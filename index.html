@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sholo Guti (ষোল গুটি)</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="topbar-title-btn" class="topbar-title">Sholo Guti <span class="bn">ষোল গুটি</span></button>
+    <nav class="topbar-nav">
+      <button id="sound-toggle" class="nav-btn" data-i18n="soundOn">Sound: On</button>
+      <select id="lang-select" class="lang-select" aria-label="Language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+        <option value="ko">한국어</option>
+      </select>
+      <button id="new-game-btn" class="nav-btn" data-i18n="newGame">New Game</button>
+    </nav>
+  </header>
+
+  <main id="app-root">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen">
+      <div class="home-hero">
+        <h1 data-i18n="appTitle">Sholo Guti</h1>
+        <p class="home-tagline" data-i18n="homeTagline"></p>
+      </div>
+      <div class="home-grid">
+        <button id="card-tutorial" class="home-card">
+          <h2 data-i18n="homeTutorialTitle"></h2>
+          <p data-i18n="homeTutorialDesc"></p>
+        </button>
+        <button id="card-local" class="home-card">
+          <h2 data-i18n="homeLocalTitle"></h2>
+          <p data-i18n="homeLocalDesc"></p>
+        </button>
+        <button id="card-ai" class="home-card">
+          <h2 data-i18n="homeAiTitle"></h2>
+          <p data-i18n="homeAiDesc"></p>
+        </button>
+        <button id="card-chardesign" class="home-card">
+          <h2 data-i18n="homeCharTitle"></h2>
+          <p data-i18n="homeCharDesc"></p>
+        </button>
+      </div>
+    </section>
+
+    <!-- TUTORIAL -->
+    <section id="screen-tutorial" class="screen hidden">
+      <div class="subscreen-header">
+        <h2 data-i18n="homeTutorialTitle"></h2>
+        <button class="link-btn back-home-link" data-i18n="backToHome"></button>
+      </div>
+      <div class="tutorial-content">
+        <p class="tutorial-intro" data-i18n="tutorialIntro"></p>
+
+        <h3 data-i18n="tutorialSetupTitle"></h3>
+        <p data-i18n="tutorialSetupBody"></p>
+
+        <h3 data-i18n="tutorialMoveTitle"></h3>
+        <p data-i18n="tutorialMoveBody"></p>
+
+        <h3 data-i18n="tutorialCaptureTitle"></h3>
+        <p data-i18n="tutorialCaptureBody"></p>
+
+        <h3 data-i18n="tutorialChainTitle"></h3>
+        <p data-i18n="tutorialChainBody"></p>
+
+        <h3 data-i18n="tutorialWinTitle"></h3>
+        <p data-i18n="tutorialWinBody"></p>
+
+        <h3 data-i18n="tutorialTryTitle"></h3>
+        <p data-i18n="tutorialTryBody"></p>
+
+        <div class="tutorial-controls">
+          <button id="practice-move-btn" class="choice-btn" data-i18n="tutorialTryMove"></button>
+          <button id="practice-capture-btn" class="choice-btn" data-i18n="tutorialTryCapture"></button>
+          <button id="practice-reset-btn" class="choice-btn" data-i18n="resetPractice"></button>
+        </div>
+        <div id="tutorial-practice-msg" style="text-align:center; min-height:1.4em; font-weight:700; color: var(--gold);"></div>
+        <div id="tutorial-board-container" class="tutorial-practice-board"></div>
+      </div>
+    </section>
+
+    <!-- LOCAL PLAY -->
+    <section id="screen-local" class="screen hidden">
+      <div class="subscreen-header">
+        <h2 data-i18n="homeLocalTitle"></h2>
+        <button class="link-btn back-home-link" data-i18n="backToHome"></button>
+      </div>
+      <div id="local-turn-indicator" class="turn-indicator"></div>
+      <div class="end-turn-row">
+        <button id="local-end-turn-btn" class="choice-btn hidden" data-i18n="endTurn"></button>
+      </div>
+      <div class="board-stage">
+        <div id="local-board-container" class="board-container"></div>
+      </div>
+    </section>
+
+    <!-- VS AI -->
+    <section id="screen-vsai" class="screen hidden">
+      <div class="subscreen-header">
+        <h2 data-i18n="homeAiTitle"></h2>
+        <button class="link-btn back-home-link" data-i18n="backToHome"></button>
+      </div>
+
+      <div id="ai-setup-panel" class="ai-setup">
+        <div class="setup-group">
+          <label data-i18n="aiDifficultyLabel"></label>
+          <div id="ai-difficulty-group" class="choice-row">
+            <button class="choice-btn" data-value="easy" data-i18n="aiEasy"></button>
+            <button class="choice-btn active" data-value="medium" data-i18n="aiMedium"></button>
+            <button class="choice-btn" data-value="hard" data-i18n="aiHard"></button>
+          </div>
+        </div>
+        <div class="setup-group">
+          <label data-i18n="aiYourSide"></label>
+          <div id="ai-side-group" class="choice-row">
+            <button class="choice-btn active" data-value="red" data-i18n="red"></button>
+            <button class="choice-btn" data-value="green" data-i18n="green"></button>
+          </div>
+        </div>
+        <button id="start-match-btn" class="start-match-btn" data-i18n="startMatch"></button>
+      </div>
+
+      <div id="ai-board-wrap" class="hidden">
+        <div id="ai-turn-indicator" class="turn-indicator"></div>
+        <div class="end-turn-row">
+          <button id="ai-end-turn-btn" class="choice-btn hidden" data-i18n="endTurn"></button>
+        </div>
+        <div class="board-stage">
+          <div id="ai-board-container" class="board-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHARACTER DESIGN -->
+    <section id="screen-chardesign" class="screen hidden">
+      <div class="subscreen-header">
+        <h2 data-i18n="homeCharTitle"></h2>
+        <button class="link-btn back-home-link" data-i18n="backToHome"></button>
+      </div>
+      <div class="chardesign-content">
+        <p data-i18n="charDesignBody"></p>
+        <div class="skin-picker-row">
+          <div class="skin-picker-col">
+            <h3 data-i18n="charRedLabel"></h3>
+            <div id="skin-picker-red" class="skin-options"></div>
+          </div>
+          <div class="skin-picker-col">
+            <h3 data-i18n="charGreenLabel"></h3>
+            <div id="skin-picker-green" class="skin-options"></div>
+          </div>
+        </div>
+        <button id="chardesign-play-btn" class="start-match-btn" data-i18n="applyAndPlay"></button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- WIN / DRAW OVERLAY -->
+  <div id="win-overlay" class="win-overlay hidden">
+    <div class="win-card">
+      <h2 id="win-message"></h2>
+      <div>
+        <button id="win-play-again-btn" class="choice-btn" data-i18n="playAgain"></button>
+        <button id="win-home-btn" class="choice-btn" data-i18n="backToHome"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/board-data.js"></script>
+  <script src="js/rules-engine.js"></script>
+  <script src="js/game-state.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/board-render.js"></script>
+  <script src="js/interaction.js"></script>
+  <script src="js/tutorial-sandbox.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
