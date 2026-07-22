@@ -49,6 +49,17 @@ body {
   flex-wrap: wrap;
 }
 
+.site-footer {
+  margin-top: auto;
+  padding: 0.9rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--parchment);
+  opacity: 0.7;
+  background: linear-gradient(0deg, #2a160d 0%, #1f110a 100%);
+  border-top: 3px solid var(--gold);
+}
+
 .topbar-title {
   font-size: 1.3rem;
   font-weight: 700;
