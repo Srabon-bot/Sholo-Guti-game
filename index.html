@@ -55,33 +55,64 @@
         <button class="link-btn back-home-link" data-i18n="backToHome"></button>
       </div>
       <div class="tutorial-content">
-        <p class="tutorial-intro" data-i18n="tutorialIntro"></p>
+        <div class="tutorial-step-label" id="tutorial-step-label"></div>
+        <div class="tutorial-progress" id="tutorial-progress"></div>
 
-        <h3 data-i18n="tutorialSetupTitle"></h3>
-        <p data-i18n="tutorialSetupBody"></p>
-
-        <h3 data-i18n="tutorialMoveTitle"></h3>
-        <p data-i18n="tutorialMoveBody"></p>
-
-        <h3 data-i18n="tutorialCaptureTitle"></h3>
-        <p data-i18n="tutorialCaptureBody"></p>
-
-        <h3 data-i18n="tutorialChainTitle"></h3>
-        <p data-i18n="tutorialChainBody"></p>
-
-        <h3 data-i18n="tutorialWinTitle"></h3>
-        <p data-i18n="tutorialWinBody"></p>
-
-        <h3 data-i18n="tutorialTryTitle"></h3>
-        <p data-i18n="tutorialTryBody"></p>
-
-        <div class="tutorial-controls">
-          <button id="practice-move-btn" class="choice-btn" data-i18n="tutorialTryMove"></button>
-          <button id="practice-capture-btn" class="choice-btn" data-i18n="tutorialTryCapture"></button>
-          <button id="practice-reset-btn" class="choice-btn" data-i18n="resetPractice"></button>
+        <div class="tutorial-step" data-step="0">
+          <p class="tutorial-intro" data-i18n="tutorialIntro"></p>
+          <h3 data-i18n="tutorialSetupTitle"></h3>
+          <p data-i18n="tutorialSetupBody"></p>
         </div>
+
+        <div class="tutorial-step hidden" data-step="1">
+          <h3 data-i18n="tutorialMoveTitle"></h3>
+          <p data-i18n="tutorialMoveBody"></p>
+        </div>
+
+        <div class="tutorial-step hidden" data-step="2">
+          <h3 data-i18n="tutorialCaptureTitle"></h3>
+          <p data-i18n="tutorialCaptureBody"></p>
+          <div class="tutorial-note">
+            <span class="tutorial-note-icon" aria-hidden="true">🎲</span>
+            <p data-i18n="tutorialHouseRuleNote"></p>
+          </div>
+        </div>
+
+        <div class="tutorial-step hidden" data-step="3">
+          <h3 data-i18n="tutorialChainTitle"></h3>
+          <p data-i18n="tutorialChainBody"></p>
+        </div>
+
+        <div class="tutorial-step hidden" data-step="4">
+          <h3 data-i18n="tutorialWinTitle"></h3>
+          <p data-i18n="tutorialWinBody"></p>
+        </div>
+
+        <div class="tutorial-step hidden" data-step="5">
+          <h3 data-i18n="tutorialRecapTitle"></h3>
+          <p data-i18n="tutorialRecapBody"></p>
+          <div class="tutorial-checklist" id="tutorial-checklist"></div>
+          <div class="tutorial-play-row">
+            <button id="tutorial-play-local-btn" class="start-match-btn" data-i18n="tutorialPlayLocal"></button>
+            <button id="tutorial-play-ai-btn" class="start-match-btn" data-i18n="tutorialPlayAI"></button>
+          </div>
+        </div>
+
+        <div class="tutorial-legend hidden" id="tutorial-legend">
+          <div class="legend-item"><span class="legend-swatch legend-capture"></span><span data-i18n="legendCanCapture"></span></div>
+          <div class="legend-item"><span class="legend-swatch legend-dest"></span><span data-i18n="legendLegalDest"></span></div>
+          <div class="legend-item"><span class="legend-swatch legend-selected"></span><span data-i18n="legendSelected"></span></div>
+        </div>
+
+        <p class="tutorial-caption hidden" id="tutorial-stalemate-caption" data-i18n="tutorialStalemateCaption"></p>
         <div id="tutorial-practice-msg" style="text-align:center; min-height:1.4em; font-weight:700; color: var(--gold);"></div>
         <div id="tutorial-board-container" class="tutorial-practice-board"></div>
+
+        <div class="tutorial-controls">
+          <button id="tutorial-prev-btn" class="choice-btn hidden" data-i18n="tutorialPrev"></button>
+          <button id="tutorial-reset-btn" class="choice-btn hidden" data-i18n="resetPractice"></button>
+          <button id="tutorial-next-btn" class="choice-btn" data-i18n="tutorialNext"></button>
+        </div>
       </div>
     </section>
 

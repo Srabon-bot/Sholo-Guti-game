@@ -243,17 +243,104 @@ function wireChoiceGroup(groupEl, onPick) {
 }
 
 // ---------- Tutorial ----------
+// A 6-step guided walkthrough (Setup/Move/Capture/Chain/Win/Recap). Each
+// step optionally drives the shared mini board via TutorialSandbox — static
+// steps (setup, win/stalemate) are "done" the moment they're viewed since
+// there's nothing to do but look; interactive steps (move/capture/chain)
+// only count as done once the drill actually completes. Progress is purely
+// cosmetic (a checklist + a confetti payoff on reaching the end) — every
+// step is reachable at any time via the dot nav, nothing is gated.
+
+const TUTORIAL_STEPS = [
+  { scenario: 'setup', showBoard: true, showLegend: false, showReset: false, showCaption: false, titleKey: 'tutorialSetupTitle' },
+  { scenario: 'move', showBoard: true, showLegend: true, showReset: true, showCaption: false, titleKey: 'tutorialMoveTitle' },
+  { scenario: 'capture', showBoard: true, showLegend: true, showReset: true, showCaption: false, titleKey: 'tutorialCaptureTitle' },
+  { scenario: 'chain', showBoard: true, showLegend: true, showReset: true, showCaption: false, titleKey: 'tutorialChainTitle' },
+  { scenario: 'stalemate', showBoard: true, showLegend: false, showReset: false, showCaption: true, titleKey: 'tutorialWinTitle' },
+  { scenario: null, showBoard: false, showLegend: false, showReset: false, showCaption: false, titleKey: null },
+];
+const TUTORIAL_LAST_CONTENT_STEP = TUTORIAL_STEPS.length - 2; // index of the last step with a scenario (win/stalemate)
+
+let tutorialStepIndex = 0;
+let tutorialCompleted = new Set();
+let tutorialConfettiFired = false;
+
+function renderTutorialProgress() {
+  const label = document.getElementById('tutorial-step-label');
+  label.textContent = languageStore.t('tutorialStepOf', { n: tutorialStepIndex + 1, total: TUTORIAL_STEPS.length });
+
+  const el = document.getElementById('tutorial-progress');
+  el.innerHTML = '';
+  TUTORIAL_STEPS.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'tutorial-dot' + (i === tutorialStepIndex ? ' active' : '') + (tutorialCompleted.has(i) ? ' done' : '');
+    dot.setAttribute('aria-label', `${i + 1}`);
+    dot.addEventListener('click', () => goToTutorialStep(i));
+    el.appendChild(dot);
+  });
+}
+
+function renderTutorialChecklist() {
+  const el = document.getElementById('tutorial-checklist');
+  el.innerHTML = '';
+  for (let i = 0; i <= TUTORIAL_LAST_CONTENT_STEP; i++) {
+    const done = tutorialCompleted.has(i);
+    const item = document.createElement('div');
+    item.className = 'checklist-item' + (done ? ' done' : '');
+    item.innerHTML = `<span class="checklist-mark">${done ? '✓' : '○'}</span><span data-i18n="${TUTORIAL_STEPS[i].titleKey}"></span>`;
+    el.appendChild(item);
+  }
+  applyI18n(languageStore.current);
+}
+
+function goToTutorialStep(index) {
+  tutorialStepIndex = Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, index));
+  const step = TUTORIAL_STEPS[tutorialStepIndex];
+
+  document.querySelectorAll('.tutorial-step').forEach(el => {
+    el.classList.toggle('hidden', Number(el.dataset.step) !== tutorialStepIndex);
+  });
+  document.getElementById('tutorial-legend').classList.toggle('hidden', !step.showLegend);
+  document.getElementById('tutorial-board-container').classList.toggle('hidden', !step.showBoard);
+  document.getElementById('tutorial-stalemate-caption').classList.toggle('hidden', !step.showCaption);
+  document.getElementById('tutorial-reset-btn').classList.toggle('hidden', !step.showReset);
+  document.getElementById('tutorial-prev-btn').classList.toggle('hidden', tutorialStepIndex === 0);
+  document.getElementById('tutorial-next-btn').classList.toggle('hidden', tutorialStepIndex === TUTORIAL_STEPS.length - 1);
+  document.getElementById('tutorial-practice-msg').textContent = '';
+
+  if (step.scenario) tutorialSandbox.loadScenario(step.scenario);
+
+  if (tutorialStepIndex === TUTORIAL_STEPS.length - 1) {
+    renderTutorialChecklist();
+    if (!tutorialConfettiFired && tutorialCompleted.size > TUTORIAL_LAST_CONTENT_STEP) {
+      tutorialConfettiFired = true;
+      launchConfetti();
+    }
+  }
+
+  renderTutorialProgress();
+}
 
 function initTutorialScreen() {
   const container = document.getElementById('tutorial-board-container');
   const msgEl = document.getElementById('tutorial-practice-msg');
+  tutorialStepIndex = 0;
+  tutorialCompleted = new Set();
+  tutorialConfettiFired = false;
+
   tutorialSandbox = new TutorialSandbox(container, (kind) => {
-    msgEl.textContent = kind === 'move'
-      ? '✓ ' + languageStore.t('tutorialTryMove')
-      : '✓ ' + languageStore.t('tutorialTryCapture');
+    const idx = TUTORIAL_STEPS.findIndex(s => s.scenario === kind);
+    if (idx === -1) return;
+    const isNewlyDone = !tutorialCompleted.has(idx);
+    tutorialCompleted.add(idx);
+    if (isNewlyDone && TUTORIAL_STEPS[idx].showReset) {
+      msgEl.textContent = '✓ ' + languageStore.t('tutorialDrillDone');
+    }
+    renderTutorialProgress();
   });
-  tutorialSandbox.loadScenario('move');
-  msgEl.textContent = '';
+
+  goToTutorialStep(0);
 }
 
 // ---------- Character Design ----------
@@ -386,18 +473,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Back links
   document.querySelectorAll('.back-home-link').forEach(btn => btn.addEventListener('click', goHome));
 
-  // Tutorial practice controls
-  document.getElementById('practice-move-btn').addEventListener('click', () => {
-    tutorialSandbox.loadScenario('move');
-    document.getElementById('tutorial-practice-msg').textContent = '';
+  // Tutorial step navigation
+  document.getElementById('tutorial-prev-btn').addEventListener('click', () => {
+    goToTutorialStep(tutorialStepIndex - 1);
+    soundStore.click();
   });
-  document.getElementById('practice-capture-btn').addEventListener('click', () => {
-    tutorialSandbox.loadScenario('capture');
-    document.getElementById('tutorial-practice-msg').textContent = '';
+  document.getElementById('tutorial-next-btn').addEventListener('click', () => {
+    goToTutorialStep(tutorialStepIndex + 1);
+    soundStore.click();
   });
-  document.getElementById('practice-reset-btn').addEventListener('click', () => {
+  document.getElementById('tutorial-reset-btn').addEventListener('click', () => {
     tutorialSandbox.loadScenario(tutorialSandbox.kind);
     document.getElementById('tutorial-practice-msg').textContent = '';
+  });
+  document.getElementById('tutorial-play-local-btn').addEventListener('click', () => {
+    showScreen('screen-local');
+    startLocalMatch();
+  });
+  document.getElementById('tutorial-play-ai-btn').addEventListener('click', () => {
+    showScreen('screen-vsai');
+    showAISetup();
   });
 
   // vs AI setup controls
@@ -437,6 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('win-overlay');
     if (!overlay.classList.contains('hidden') && activeMatch && activeMatch.state.result) {
       document.getElementById('win-message').textContent = resultMessage(activeMatch.state.result);
+    }
+    if (tutorialSandbox) {
+      renderTutorialProgress();
+      if (tutorialStepIndex === TUTORIAL_STEPS.length - 1) renderTutorialChecklist();
     }
   });
 

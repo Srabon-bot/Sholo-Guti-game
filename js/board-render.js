@@ -30,6 +30,7 @@ function computeViewBox() {
 //   canCaptureFrom: Set<nodeId>   (pieces with a capture available right now — informational, not mandatory),
 //   movableFrom: Set<nodeId>      (pieces selectable this turn, capture or simple),
 //   legalTo: Set<nodeId>          (destinations for the currently selected piece),
+//   trapped: Set<nodeId>          (tutorial-only: pieces with no legal move at all, for the stalemate demo),
 //   pieceSkin: { red: className, green: className } (optional, for Character Design)
 //   pieceImages: { red: dataURL|null, green: dataURL|null } (custom photo, when skin is 'skin-custom')
 // }
@@ -38,6 +39,7 @@ function renderBoard(container, state, ui = {}) {
   const canCaptureFrom = ui.canCaptureFrom || new Set();
   const movableFrom = ui.movableFrom || new Set();
   const legalTo = ui.legalTo || new Set();
+  const trapped = ui.trapped || new Set();
   const pieceSkin = ui.pieceSkin || {};
   const pieceImages = ui.pieceImages || {};
 
@@ -100,6 +102,7 @@ function renderBoard(container, state, ui = {}) {
       if (canCaptureFrom.has(id)) groupClasses.push('piece-can-capture');
       if (movableFrom.has(id)) groupClasses.push('piece-movable');
       if (selected === id) groupClasses.push('piece-selected');
+      if (trapped.has(id)) groupClasses.push('piece-trapped');
 
       const pieceGroup = svgEl('g', {
         class: groupClasses.join(' '),
