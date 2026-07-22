@@ -12,8 +12,10 @@ const appState = {
 
 let activeMatch = null;
 let tutorialSandbox = null;
-let activeIndicatorEl = null;
+let activeTurnPopupEl = null;
+let activeTurnStatusEl = null;
 let activeEndTurnBtn = null;
+let turnPopupTimer = null;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -50,16 +52,37 @@ function resultMessage(result) {
   return languageStore.t('winElimination', { winner: winnerName });
 }
 
-function updateTurnIndicator(indicatorEl, match) {
-  indicatorEl.className = 'turn-indicator';
-  if (match.state.result) {
-    indicatorEl.textContent = resultMessage(match.state.result);
-    if (match.state.result.winner) indicatorEl.classList.add(`turn-${match.state.result.winner}`);
-    return;
-  }
+// Transient "whose turn" toast — replaces the old always-on bar so that
+// vertical space (freed by moving the piece tracker to the board's sides)
+// goes to the board instead. Game-end messaging still goes through the
+// win overlay below, so this only ever needs to announce a turn change.
+function showTurnPopup(popupEl, match) {
+  if (!popupEl || match.state.result) return;
+  clearTimeout(turnPopupTimer);
   const cp = match.state.currentPlayer;
-  indicatorEl.textContent = languageStore.t(cp === 'red' ? 'redTurn' : 'greenTurn');
-  indicatorEl.classList.add(`turn-${cp}`);
+  popupEl.textContent = languageStore.t(cp === 'red' ? 'redTurn' : 'greenTurn');
+  popupEl.className = `turn-popup show turn-${cp}`;
+  turnPopupTimer = setTimeout(() => {
+    popupEl.classList.remove('show');
+  }, 1500);
+}
+
+// On a language switch, only refresh text if the popup happens to be
+// visible right now — don't resurrect one that already faded out.
+function refreshVisibleTurnPopup(popupEl, match) {
+  if (!popupEl || !popupEl.classList.contains('show') || match.state.result) return;
+  const cp = match.state.currentPlayer;
+  popupEl.textContent = languageStore.t(cp === 'red' ? 'redTurn' : 'greenTurn');
+}
+
+// Persistent companion to the popup, pinned just above the footer — unlike
+// the popup this never fades, so whose turn it is stays visible at a
+// glance even long after the toast has gone.
+function updateTurnStatus(statusEl, match) {
+  if (!statusEl || match.state.result) return;
+  const cp = match.state.currentPlayer;
+  statusEl.textContent = languageStore.t(cp === 'red' ? 'redTurn' : 'greenTurn');
+  statusEl.className = `turn-status turn-${cp}`;
 }
 
 function showWinOverlay(result) {
@@ -83,13 +106,69 @@ function updateEndTurnButton(btnEl, match) {
   btnEl.classList.toggle('hidden', !match.hasActiveChain());
 }
 
-function makeEventHandler(indicatorEl, endTurnBtn) {
+// ---------- Piece tracker (remaining beads + captured tally) ----------
+// Purely presentational: reads nodesOwnedBy() off the live match state.
+// Beads are built once per match start and then have a class toggled per
+// update, so the CSS transition on `.bead` actually animates instead of
+// snapping (a fresh element each render wouldn't transition).
+
+function buildBeadsRow(el) {
+  el.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const bead = document.createElement('span');
+    bead.className = 'bead';
+    el.appendChild(bead);
+  }
+}
+
+function setupPieceTracker(prefix) {
+  const refs = {
+    beadsRed: document.getElementById(`${prefix}-beads-red`),
+    beadsGreen: document.getElementById(`${prefix}-beads-green`),
+    capturedRed: document.getElementById(`${prefix}-captured-red`),
+    capturedGreen: document.getElementById(`${prefix}-captured-green`),
+  };
+  buildBeadsRow(refs.beadsRed);
+  buildBeadsRow(refs.beadsGreen);
+  return refs;
+}
+
+function bumpNumber(el, value) {
+  if (el.textContent === String(value)) return;
+  el.textContent = value;
+  el.classList.remove('bump');
+  void el.offsetWidth; // restart the animation
+  el.classList.add('bump');
+}
+
+function updatePieceTracker(tracker, match) {
+  if (!tracker || !match) return;
+  const board = match.state.board;
+  const redLeft = nodesOwnedBy(board, 'red').length;
+  const greenLeft = nodesOwnedBy(board, 'green').length;
+
+  const beadsRed = tracker.beadsRed.children;
+  const beadsGreen = tracker.beadsGreen.children;
+  for (let i = 0; i < 16; i++) {
+    beadsRed[i].classList.toggle('captured', i >= redLeft);
+    beadsGreen[i].classList.toggle('captured', i >= greenLeft);
+  }
+
+  bumpNumber(tracker.capturedRed, 16 - greenLeft);
+  bumpNumber(tracker.capturedGreen, 16 - redLeft);
+}
+
+function makeEventHandler(popupEl, statusEl, endTurnBtn, tracker) {
   return (evt) => {
     if (evt.type === 'move') soundStore.move();
     if (evt.type === 'capture') soundStore.capture();
-    if (evt.type === 'turn' || evt.type === 'gameover') updateTurnIndicator(indicatorEl, activeMatch);
+    if (evt.type === 'turn') {
+      showTurnPopup(popupEl, activeMatch);
+      updateTurnStatus(statusEl, activeMatch);
+    }
     if (evt.type === 'gameover') showWinOverlay(evt.result);
     updateEndTurnButton(endTurnBtn, activeMatch);
+    updatePieceTracker(tracker, activeMatch);
   };
 }
 
@@ -99,17 +178,22 @@ function startLocalMatch() {
   teardownActiveMatch();
   hideWinOverlay();
   const container = document.getElementById('local-board-container');
-  const indicator = document.getElementById('local-turn-indicator');
+  const popup = document.getElementById('local-turn-popup');
+  const status = document.getElementById('local-turn-status');
   const endTurnBtn = document.getElementById('local-end-turn-btn');
-  activeIndicatorEl = indicator;
+  const tracker = setupPieceTracker('local');
+  activeTurnPopupEl = popup;
+  activeTurnStatusEl = status;
   activeEndTurnBtn = endTurnBtn;
   activeMatch = new MatchController(container, {
     pieceSkin: appState.pieceSkin,
     pieceImages: appState.customPieceImage,
-    onEvent: makeEventHandler(indicator, endTurnBtn),
+    onEvent: makeEventHandler(popup, status, endTurnBtn, tracker),
   });
-  updateTurnIndicator(indicator, activeMatch);
+  showTurnPopup(popup, activeMatch);
+  updateTurnStatus(status, activeMatch);
   updateEndTurnButton(endTurnBtn, activeMatch);
+  updatePieceTracker(tracker, activeMatch);
 }
 
 // ---------- vs AI ----------
@@ -126,9 +210,12 @@ function startAIMatch() {
   document.getElementById('ai-board-wrap').classList.remove('hidden');
 
   const container = document.getElementById('ai-board-container');
-  const indicator = document.getElementById('ai-turn-indicator');
+  const popup = document.getElementById('ai-turn-popup');
+  const status = document.getElementById('ai-turn-status');
   const endTurnBtn = document.getElementById('ai-end-turn-btn');
-  activeIndicatorEl = indicator;
+  const tracker = setupPieceTracker('ai');
+  activeTurnPopupEl = popup;
+  activeTurnStatusEl = status;
   activeEndTurnBtn = endTurnBtn;
   const aiPlayer = otherPlayer(appState.aiHumanSide);
   activeMatch = new MatchController(container, {
@@ -136,10 +223,12 @@ function startAIMatch() {
     pieceImages: appState.customPieceImage,
     aiPlayer,
     aiDifficulty: appState.aiDifficulty,
-    onEvent: makeEventHandler(indicator, endTurnBtn),
+    onEvent: makeEventHandler(popup, status, endTurnBtn, tracker),
   });
-  updateTurnIndicator(indicator, activeMatch);
+  showTurnPopup(popup, activeMatch);
+  updateTurnStatus(status, activeMatch);
   updateEndTurnButton(endTurnBtn, activeMatch);
+  updatePieceTracker(tracker, activeMatch);
 }
 
 function wireChoiceGroup(groupEl, onPick) {
@@ -343,7 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('win-home-btn').addEventListener('click', goHome);
 
   languageStore.onChange(() => {
-    if (activeMatch && activeIndicatorEl) updateTurnIndicator(activeIndicatorEl, activeMatch);
+    if (activeMatch && activeTurnPopupEl) refreshVisibleTurnPopup(activeTurnPopupEl, activeMatch);
+    if (activeMatch && activeTurnStatusEl) updateTurnStatus(activeTurnStatusEl, activeMatch);
     const overlay = document.getElementById('win-overlay');
     if (!overlay.classList.contains('hidden') && activeMatch && activeMatch.state.result) {
       document.getElementById('win-message').textContent = resultMessage(activeMatch.state.result);

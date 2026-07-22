@@ -34,6 +34,8 @@ const TRANSLATIONS = {
     green: 'Green',
     backToHome: '← Back to Home',
     endTurn: 'End Turn (stop capturing)',
+    capturedLabel: 'Captured',
+    remainingLabel: 'Remaining pieces',
 
     aiDifficultyLabel: 'Difficulty',
     aiEasy: 'Easy',
@@ -101,6 +103,8 @@ const TRANSLATIONS = {
     green: 'সবুজ',
     backToHome: '← হোমে ফিরুন',
     endTurn: 'পালা শেষ করুন (ধরা বন্ধ করুন)',
+    capturedLabel: 'বন্দী',
+    remainingLabel: 'অবশিষ্ট গুটি',
 
     aiDifficultyLabel: 'কঠিনতা',
     aiEasy: 'সহজ',
@@ -168,6 +172,8 @@ const TRANSLATIONS = {
     green: '초록',
     backToHome: '← 홈으로',
     endTurn: '턴 종료 (그만 잡기)',
+    capturedLabel: '포획',
+    remainingLabel: '남은 말',
 
     aiDifficultyLabel: '난이도',
     aiEasy: '쉬움',

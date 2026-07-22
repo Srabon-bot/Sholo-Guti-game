@@ -7,7 +7,14 @@
 // (move/capture/turn/gameover) so sound/UI layers can react without this
 // module knowing about them.
 
-const AI_HOP_DELAY_MS = 550;
+// AI pacing: a randomized "thinking" pause before it acts, then a visible
+// slide for the move itself (see animatePieceTravel in board-render.js),
+// plus a short pause between hops of a capture chain so multi-jump chains
+// read as a sequence of decisions rather than pieces vanishing at once.
+const AI_THINK_MIN_MS = 500;
+const AI_THINK_MAX_MS = 950;
+const AI_SLIDE_MS = 380;
+const AI_HOP_PAUSE_MS = 400;
 
 class MatchController {
   constructor(container, options = {}) {
@@ -137,15 +144,20 @@ class MatchController {
   _maybeTriggerAI() {
     if (this.state.result) return;
     if (this.state.currentPlayer !== this.aiPlayer) return;
-    setTimeout(() => this._runAITurn(), 400);
+    const thinkDelay = AI_THINK_MIN_MS + Math.random() * (AI_THINK_MAX_MS - AI_THINK_MIN_MS);
+    setTimeout(() => this._runAITurn(), thinkDelay);
   }
 
-  _runAITurn() {
+  async _runAITurn() {
     if (this._destroyed) return;
     const turn = chooseAIMove(this.state, this.aiDifficulty);
     if (!turn) return;
 
     if (!turn.captured) {
+      // Slide the piece into view before committing the state change, so a
+      // simple AI move reads as a deliberate step rather than a teleport.
+      await animatePieceTravel(this.container, { from: turn.from, to: turn.to, duration: AI_SLIDE_MS });
+      if (this._destroyed) return;
       const end = applyTurn(this.state, turn);
       this.onEvent({ type: 'move' });
       this._afterTurn(end);
@@ -157,11 +169,15 @@ class MatchController {
     this._animateAIChain(turn, 0);
   }
 
-  _animateAIChain(turn, index) {
+  async _animateAIChain(turn, index) {
     if (this._destroyed) return;
     const from = turn.path[index];
     const to = turn.path[index + 1];
     const over = turn.captured[index];
+
+    await animatePieceTravel(this.container, { from, to, over, duration: AI_SLIDE_MS });
+    if (this._destroyed) return;
+
     const mover = this.state.board[from];
     const newBoard = { ...this.state.board, [from]: null, [over]: null, [to]: mover };
     this.state.board = newBoard;
@@ -169,7 +185,7 @@ class MatchController {
     this.onEvent({ type: 'capture' });
 
     if (index + 1 < turn.captured.length) {
-      setTimeout(() => this._animateAIChain(turn, index + 1), AI_HOP_DELAY_MS);
+      setTimeout(() => this._animateAIChain(turn, index + 1), AI_HOP_PAUSE_MS);
       return;
     }
 

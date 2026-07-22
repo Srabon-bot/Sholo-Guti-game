@@ -145,3 +145,55 @@ function renderBoard(container, state, ui = {}) {
   svg.appendChild(highlightGroup);
   container.appendChild(svg);
 }
+
+// Animates one hop of a piece already shown by the last renderBoard() call —
+// used to slow the AI down to a human-visible speed instead of teleporting.
+// Clones the real (already-styled) piece element and slides the clone from
+// `from` to `to` via the SVG `transform` attribute (plain rAF easing, not a
+// CSS transition — CSS transform units on SVG elements are unreliable across
+// browsers, while the transform *attribute* uses the same user-space units
+// as cx/cy). `over`, if given, is the jumped piece's node id: it plays a
+// quick shrink-and-fade "captured" animation timed with the hop.
+// Resolves once the animation finishes (or immediately if the expected DOM
+// isn't there, e.g. a mid-flight teardown — never blocks the caller).
+function animatePieceTravel(container, { from, to, over, duration = 380 }) {
+  return new Promise((resolve) => {
+    const svg = container.querySelector('svg');
+    const fromPos = BOARD_NODES[from];
+    const toPos = BOARD_NODES[to];
+    const fromEl = svg && svg.querySelector(`[data-role="piece"][data-node="${from}"]`);
+    if (!svg || !fromPos || !toPos || !fromEl) { resolve(); return; }
+
+    if (over) {
+      const overEl = svg.querySelector(`[data-role="piece"][data-node="${over}"]`);
+      if (overEl) overEl.classList.add('piece-vanishing');
+    }
+
+    fromEl.style.visibility = 'hidden';
+
+    const clone = fromEl.cloneNode(true);
+    clone.classList.remove('piece-can-capture', 'piece-movable', 'piece-selected');
+    clone.classList.add('piece-traveling');
+    clone.style.visibility = 'visible';
+    svg.querySelector('.board-pieces').appendChild(clone);
+
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    const start = performance.now();
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    function step(now) {
+      if (!clone.isConnected) { resolve(); return; } // torn down mid-flight
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeOutCubic(t);
+      clone.setAttribute('transform', `translate(${dx * e}, ${dy * e})`);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        clone.remove();
+        resolve();
+      }
+    }
+    requestAnimationFrame(step);
+  });
+}

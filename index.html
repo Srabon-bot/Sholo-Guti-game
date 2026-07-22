@@ -91,13 +91,32 @@
         <h2 data-i18n="homeLocalTitle"></h2>
         <button class="link-btn back-home-link" data-i18n="backToHome"></button>
       </div>
-      <div id="local-turn-indicator" class="turn-indicator"></div>
       <div class="end-turn-row">
         <button id="local-end-turn-btn" class="choice-btn hidden" data-i18n="endTurn"></button>
       </div>
       <div class="board-stage">
-        <div id="local-board-container" class="board-container"></div>
+        <div class="board-row">
+          <div class="tracker-side tracker-side-red">
+            <div class="tracker-head"><span class="tracker-dot dot-red"></span><span data-i18n="red"></span></div>
+            <div id="local-beads-red" class="tracker-beads bead-row-red" data-i18n-attr="aria-label:remainingLabel"></div>
+            <div class="tracker-caption">
+              <span class="tracker-pot-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8 L7.5 19 a2 2 0 0 0 2 1.7h5a2 2 0 0 0 2-1.7L18 8"/><path d="M4 8 h16"/><path d="M9 8 V6 a3 3 0 0 1 6 0 v2"/></svg></span>
+              <span data-i18n="capturedLabel"></span>: <span id="local-captured-red" class="tracker-captured-num">0</span>
+            </div>
+          </div>
+          <div id="local-board-container" class="board-container"></div>
+          <div class="tracker-side tracker-side-green">
+            <div class="tracker-head"><span class="tracker-dot dot-green"></span><span data-i18n="green"></span></div>
+            <div id="local-beads-green" class="tracker-beads bead-row-green" data-i18n-attr="aria-label:remainingLabel"></div>
+            <div class="tracker-caption">
+              <span class="tracker-pot-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8 L7.5 19 a2 2 0 0 0 2 1.7h5a2 2 0 0 0 2-1.7L18 8"/><path d="M4 8 h16"/><path d="M9 8 V6 a3 3 0 0 1 6 0 v2"/></svg></span>
+              <span data-i18n="capturedLabel"></span>: <span id="local-captured-green" class="tracker-captured-num">0</span>
+            </div>
+          </div>
+        </div>
+        <div id="local-turn-popup" class="turn-popup"></div>
       </div>
+      <div id="local-turn-status" class="turn-status"></div>
     </section>
 
     <!-- VS AI -->
@@ -127,13 +146,32 @@
       </div>
 
       <div id="ai-board-wrap" class="hidden">
-        <div id="ai-turn-indicator" class="turn-indicator"></div>
         <div class="end-turn-row">
           <button id="ai-end-turn-btn" class="choice-btn hidden" data-i18n="endTurn"></button>
         </div>
         <div class="board-stage">
-          <div id="ai-board-container" class="board-container"></div>
+          <div class="board-row">
+            <div class="tracker-side tracker-side-red">
+              <div class="tracker-head"><span class="tracker-dot dot-red"></span><span data-i18n="red"></span></div>
+              <div id="ai-beads-red" class="tracker-beads bead-row-red" data-i18n-attr="aria-label:remainingLabel"></div>
+              <div class="tracker-caption">
+                <span class="tracker-pot-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8 L7.5 19 a2 2 0 0 0 2 1.7h5a2 2 0 0 0 2-1.7L18 8"/><path d="M4 8 h16"/><path d="M9 8 V6 a3 3 0 0 1 6 0 v2"/></svg></span>
+                <span data-i18n="capturedLabel"></span>: <span id="ai-captured-red" class="tracker-captured-num">0</span>
+              </div>
+            </div>
+            <div id="ai-board-container" class="board-container"></div>
+            <div class="tracker-side tracker-side-green">
+              <div class="tracker-head"><span class="tracker-dot dot-green"></span><span data-i18n="green"></span></div>
+              <div id="ai-beads-green" class="tracker-beads bead-row-green" data-i18n-attr="aria-label:remainingLabel"></div>
+              <div class="tracker-caption">
+                <span class="tracker-pot-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8 L7.5 19 a2 2 0 0 0 2 1.7h5a2 2 0 0 0 2-1.7L18 8"/><path d="M4 8 h16"/><path d="M9 8 V6 a3 3 0 0 1 6 0 v2"/></svg></span>
+                <span data-i18n="capturedLabel"></span>: <span id="ai-captured-green" class="tracker-captured-num">0</span>
+              </div>
+            </div>
+          </div>
+          <div id="ai-turn-popup" class="turn-popup"></div>
         </div>
+        <div id="ai-turn-status" class="turn-status"></div>
       </div>
     </section>
 

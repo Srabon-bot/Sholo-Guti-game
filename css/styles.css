@@ -28,7 +28,8 @@ body {
   color: var(--parchment);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .bn {
@@ -42,26 +43,28 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.7rem 1rem;
+  padding: 0.6rem 1rem;
   background: linear-gradient(180deg, #2a160d 0%, #1f110a 100%);
   border-bottom: 3px solid var(--gold);
   box-shadow: 0 2px 10px rgba(0,0,0,0.5);
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .site-footer {
   margin-top: auto;
-  padding: 0.9rem 1rem;
+  padding: 0.6rem 1rem;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   color: var(--parchment);
   opacity: 0.7;
   background: linear-gradient(0deg, #2a160d 0%, #1f110a 100%);
   border-top: 3px solid var(--gold);
+  flex-shrink: 0;
 }
 
 .topbar-title {
-  font-size: 1.3rem;
+  font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--gold);
@@ -82,13 +85,13 @@ body {
 
 .nav-btn, .lang-select {
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--parchment);
   background: rgba(255,255,255,0.06);
   border: 1.5px solid rgba(216,161,58,0.5);
   border-radius: 8px;
-  padding: 0.4rem 0.7rem;
+  padding: 0.5rem 0.9rem;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -113,32 +116,271 @@ body {
   color: var(--parchment);
 }
 
+#app-root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .screen {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .hidden {
   display: none !important;
 }
 
-.turn-indicator {
+/* ---------- Turn popup (transient toast, replaces the old persistent bar) ---------- */
+
+.turn-popup {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -8px) scale(0.94);
+  background: rgba(20, 10, 5, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(216,161,58,0.55);
+  border-radius: 14px;
+  padding: 0.65rem 1.6rem;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
   text-align: center;
-  padding: 0.6rem 0 0;
+  white-space: nowrap;
+  color: var(--parchment);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  z-index: 15;
+}
+
+.turn-popup.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.turn-popup.turn-red { color: #ff8a72; border-color: rgba(255,138,114,0.6); }
+.turn-popup.turn-green { color: #8fe07a; border-color: rgba(143,224,122,0.6); }
+
+/* Persistent "whose turn" line, always visible just above the footer —
+   the popup toast fades after 1.5s, this doesn't, so turn info is never
+   more than a glance away even mid-thought. */
+.turn-status {
+  text-align: center;
+  padding: 0.3rem 0;
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
-.turn-indicator.turn-red { color: var(--red-piece); }
-.turn-indicator.turn-green { color: var(--green-piece); }
+.turn-status.turn-red { color: var(--red-piece); }
+.turn-status.turn-green { color: var(--green-piece); }
+
+/* ---------- Piece tracker (remaining beads + captured tally) ---------- */
+
+.board-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "left right"
+    "board board";
+  gap: 0.4rem;
+  width: 100%;
+  align-items: center;
+  justify-items: center;
+}
+
+.tracker-side-red { grid-area: left; }
+.tracker-side-green { grid-area: right; }
+.board-container { grid-area: board; }
+
+.tracker-side {
+  width: 100%;
+  max-width: 320px;
+  background: linear-gradient(160deg, rgba(217,148,86,0.16), rgba(168,95,44,0.10));
+  border: 1.5px solid rgba(216,161,58,0.35);
+  border-radius: 10px;
+  padding: 0.3rem 0.6rem 0.35rem;
+}
+
+.tracker-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.tracker-side-red .tracker-head { color: var(--red-piece); }
+.tracker-side-green .tracker-head { color: var(--green-piece); }
+
+.tracker-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.4);
+}
+
+.dot-red { background: var(--red-piece); border: 1px solid var(--red-piece-dark); }
+.dot-green { background: var(--green-piece); border: 1px solid var(--green-piece-dark); }
+
+.tracker-beads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 0.25rem;
+}
+
+.bead {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.4);
+  transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), opacity 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+}
+
+.bead-row-red .bead { background: var(--red-piece); border: 1px solid var(--red-piece-dark); }
+.bead-row-green .bead { background: var(--green-piece); border: 1px solid var(--green-piece-dark); }
+
+.bead.captured {
+  background: transparent;
+  border: 1px dashed rgba(243,223,192,0.4);
+  box-shadow: none;
+  transform: scale(0.55) rotate(25deg);
+  opacity: 0.45;
+}
+
+.tracker-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.tracker-pot-icon {
+  color: var(--gold);
+  display: inline-flex;
+}
+
+.tracker-captured-num {
+  font-weight: 700;
+  color: var(--gold);
+  display: inline-block;
+}
+
+.tracker-captured-num.bump {
+  animation: tracker-bump 0.4s ease;
+}
+
+@keyframes tracker-bump {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.6); color: #fff2cf; }
+  100% { transform: scale(1); }
+}
+
+/* Narrow phones: tighten the stacked tracker row above the board. */
+@media (max-width: 480px) {
+  .board-row {
+    gap: 0.3rem;
+  }
+  .tracker-side {
+    max-width: none;
+    padding: 0.25rem 0.4rem 0.3rem;
+  }
+  .tracker-head {
+    font-size: 0.85rem;
+    gap: 0.25rem;
+  }
+  .bead {
+    width: 8px;
+    height: 8px;
+  }
+  .tracker-caption {
+    font-size: 0.82rem;
+  }
+}
+
+/* Wide screens: move the two tracker panels to flank the board instead of
+   stacking above it — the board no longer has to share vertical space with
+   them, so it (and everything else) can be sized larger. Each panel is a
+   tall strip that stretches to match the board's full height (rather than
+   a small box near the top), colored to its side. */
+@media (min-width: 700px) {
+  .board-row {
+    /* "auto" (not 1fr) so the middle column hugs the board's own computed
+       width — otherwise, on a wide monitor, the board stays centered on
+       the *whole row* while the row itself stretches edge-to-edge, and the
+       side panels end up stranded far out at the viewport edges instead
+       of sitting next to the board. width:auto shrinks the row itself to
+       fit its content so the whole [panel][board][panel] group is what
+       gets centered in board-stage. */
+    grid-template-columns: 108px auto 108px;
+    grid-template-areas: "left board right";
+    gap: 0.9rem;
+    width: auto;
+    align-items: stretch;
+  }
+  .tracker-side {
+    width: 100%;
+    max-width: 108px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.7rem 0.5rem 0.8rem;
+    border-width: 2px;
+  }
+  .tracker-side-red { border-color: rgba(179, 49, 31, 0.75); }
+  .tracker-side-green { border-color: rgba(63, 107, 46, 0.75); }
+  .tracker-head {
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .tracker-dot {
+    width: 12px;
+    height: 12px;
+  }
+  .tracker-beads {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: min-content;
+    align-content: space-evenly;
+    justify-items: center;
+    gap: 7px;
+    width: 100%;
+    margin: 0.7rem 0;
+  }
+  .tracker-beads .bead {
+    width: 14px;
+    height: 14px;
+  }
+  .tracker-caption {
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+}
 
 .end-turn-row {
   display: flex;
   justify-content: center;
-  min-height: 2.6rem;
-  padding-top: 0.3rem;
+  flex-shrink: 0;
 }
 
 .end-turn-row .choice-btn {
@@ -146,6 +388,7 @@ body {
   color: #2a160d;
   border-color: var(--gold);
   animation: pulse-end-turn 1.4s ease-in-out infinite;
+  margin-top: 0.3rem;
 }
 
 @keyframes pulse-end-turn {
@@ -154,17 +397,43 @@ body {
 }
 
 .board-stage {
+  position: relative;
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 0.5rem 1rem;
+  overflow: hidden;
 }
 
 .board-container {
-  width: min(92vw, 640px);
+  /* Sized to whichever dimension is tighter: viewport width, or the
+     vertical room left after the topbar/footer/tracker row/etc — so the
+     whole screen fits without scrolling instead of the board dictating the
+     page height. The 320/240 factor converts the height budget into a
+     width so min() can compare it against the width-based caps directly.
+     Below 700px the tracker panels stack above the board (more vertical
+     chrome to subtract); at 700px+ they move to the sides instead (see the
+     media query below), so the height budget grows there. */
+  width: min(92vw, 640px, calc((100vh - 326px) * 240 / 320));
   aspect-ratio: 240 / 320;
   filter: drop-shadow(0 12px 24px rgba(0,0,0,0.55));
+}
+
+@media (min-width: 700px) {
+  .board-container {
+    width: min(640px, calc(100vw - 300px), calc((100vh - 233px) * 240 / 320));
+  }
+}
+
+@media (max-width: 480px) {
+  .board-container {
+    /* The topbar wraps to two lines at this width (nav buttons don't fit
+       beside the title), which the vh-based budget above doesn't know
+       about — shave a little off the vw cap to compensate. */
+    width: min(88vw, 640px, calc((100vh - 326px) * 240 / 320));
+  }
 }
 
 .board-svg {
@@ -234,6 +503,20 @@ body {
   stroke-width: 3;
 }
 
+.piece-traveling {
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.55)) drop-shadow(0 0 8px rgba(216,161,58,0.6));
+}
+
+.piece-vanishing {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.32s ease-in, transform 0.32s ease-in;
+  opacity: 0;
+  transform: scale(0.2) rotate(25deg);
+  pointer-events: none;
+}
+
 .legal-dest {
   fill: rgba(216, 161, 58, 0.35);
   stroke: var(--gold);
@@ -255,7 +538,8 @@ body {
 
 .home-hero {
   text-align: center;
-  padding: 2rem 1.25rem 0.5rem;
+  padding: 1.2rem 1.25rem 0.4rem;
+  flex-shrink: 0;
 }
 
 .home-hero h1 {
@@ -276,8 +560,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.1rem;
-  padding: 1.5rem;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 0.75rem 1.5rem;
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
@@ -304,13 +589,13 @@ body {
 
 .home-card h2 {
   margin: 0 0 0.4rem;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   color: var(--ink);
 }
 
 .home-card p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1.08rem;
   opacity: 0.85;
 }
 
@@ -320,13 +605,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1.25rem 0.4rem;
+  padding: 0.7rem 1.25rem 0.3rem;
   flex-wrap: wrap;
   gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .subscreen-header h2 {
   margin: 0;
+  font-size: 1.75rem;
   color: var(--gold);
 }
 
@@ -336,7 +623,7 @@ body {
   color: var(--parchment);
   opacity: 0.8;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   padding: 0.3rem 0.2rem;
 }
@@ -360,7 +647,7 @@ body {
 }
 
 .setup-group label {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   opacity: 0.8;
 }
 
@@ -372,7 +659,8 @@ body {
 .choice-btn {
   font-family: inherit;
   font-weight: 700;
-  padding: 0.4rem 0.8rem;
+  font-size: 1.05rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   border: 1.5px solid rgba(216,161,58,0.5);
   background: rgba(255,255,255,0.05);
@@ -389,7 +677,7 @@ body {
 .start-match-btn {
   font-family: inherit;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.12rem;
   padding: 0.55rem 1.4rem;
   border-radius: 10px;
   border: none;
