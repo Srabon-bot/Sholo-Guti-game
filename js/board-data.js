@@ -111,3 +111,25 @@ function buildJumpMap() {
 }
 
 const JUMP_MAP = buildJumpMap();
+
+// Owner-requested extension (confirmed against the reference board): where
+// the triangle meets the square, the hub point (C3 at the top, G3 at the
+// bottom) sits at a slight geometric bend relative to the triangle's outer
+// points (B1/B3, H1/H3) — strict collinearity therefore misses B1-C3-D4,
+// B3-C3-D2, H1-G3-F4, H3-G3-F2 as capture lines, even though players read
+// them as one straight line on the rendered board. Added explicitly (both
+// directions, matching how every other capture line already works both
+// ways) rather than nudging node coordinates, so the board's visual layout
+// stays exactly as measured from the reference image.
+function addJumpMapEntry(map, from, over, to) {
+  if (!map[from]) map[from] = {};
+  map[from][over] = to;
+}
+addJumpMapEntry(JUMP_MAP, 'B1', 'C3', 'D4');
+addJumpMapEntry(JUMP_MAP, 'D4', 'C3', 'B1');
+addJumpMapEntry(JUMP_MAP, 'B3', 'C3', 'D2');
+addJumpMapEntry(JUMP_MAP, 'D2', 'C3', 'B3');
+addJumpMapEntry(JUMP_MAP, 'H1', 'G3', 'F4');
+addJumpMapEntry(JUMP_MAP, 'F4', 'G3', 'H1');
+addJumpMapEntry(JUMP_MAP, 'H3', 'G3', 'F2');
+addJumpMapEntry(JUMP_MAP, 'F2', 'G3', 'H3');
